@@ -101,7 +101,7 @@
                  VALUE "s05e02Halloween 4- The Return of Michael Myers".
                03 FILLER PIC X(49) VALUE 
                    "s05e03Halloween 5- The Curse of Michael Myers".
-               03 FILLER PIC X(49) VALUE "s06e01Black Christman".
+               03 FILLER PIC X(49) VALUE "s06e01Black Christmas".
                03 FILLER PIC X(49) VALUE "s06e02Jack Frost".
                03 FILLER PIC X(49) VALUE 
                    "s06e03Silent Night Deadly Night Part 2".      
