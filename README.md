@@ -1,0 +1,2 @@
+# Cobbot
+Discord Cobol Bot
