@@ -10,9 +10,7 @@
                SELECT RequestFile ASSIGN TO "MovieRequests.txt"
                    ORGANIZATION IS LINE SEQUENTIAL.
            DATA DIVISION.
-
            FILE SECTION.
-
            FD ReadFile.
                01 ReadRec.
                    02 Trigger              PIC X(5).
@@ -165,7 +163,7 @@
            01 Triggers                 PIC X(3).
            01 PrintRandom.
                02 PrnRand                   PIC X(13) VALUE 
-               "Now Movie: ".
+               "Now Playing: ".
                02 FILLER                    PIC XX VALUE '`"'.
                02 PrnRandMovie              PIC X(45).
                02 FILLER                    PIC X VALUE "`".
@@ -255,7 +253,6 @@
            01 TallyMovie                   PIC X(80).  
            PROCEDURE DIVISION.
            OPEN INPUT ReadFile
-           OPEN OUTPUT WriteFile
            MOVE FUNCTION CURRENT-DATE TO CurrentDate
            COMPUTE DiceR = FUNCTION RANDOM(Seed)
            DISPLAY "Main Seed: " Seed
@@ -284,10 +281,8 @@
       *    DISPLAY "Strg Size:" StrgSize
       *    CALL 'MovieTally' USING TallyMovie
       *    END-CALL
-           CLOSE ReadFile,WriteFile
+           CLOSE ReadFile
            STOP RUN.
-
-
            RollDice.
       *>   Pull apart the text after roll command  to create the amount
       *>     of times the dice will be rolled and the size of the rolled
@@ -311,11 +306,13 @@
            END-Call
            DISPLAY FullMovie
            MOVE FullMovie TO PrnTitle
-           WRITE Outstring FROM PrnMovieName.
+           DISPLAY Prntitle
+           OPEN OUTPUT WriteFile
+           WRITE Outstring FROM PrnMovieName
+           CLOSE WriteFile.
 
            GetMovieName.
            DISPLAY "Instring: " Instring
-
            INSPECT FUNCTION REVERSE(InString) TALLYING CharCount
                                FOR LEADING SPACES
                                
@@ -361,7 +358,11 @@
                INTO FULLSHOW
            DISPLAY "Full Show Path: " ShowPathRec
            CALL "SYSTEM" USING ShowPathRec
-           END-CALL.
+           END-CALL
+           OPEN OUTPUT WriteFile
+           MOVE FullShow TO PrnTitle
+           WRITE OutString FROM PrnMovieName
+           CLOSE WriteFile.
            
            GetJoeBob.
                DISPLAY "Instring: " Instring
@@ -391,7 +392,6 @@
            INSPECT FUNCTION REVERSE(HoldJName) TALLYING Charcount
                                            FOR LEADING SPACES
            COMPUTE JStrgSize = (30 - CharCount)
-
            MOVE 0 TO CharCount  
                            
            COMPUTE StrgSize = (50 - CharCount)                                             
@@ -402,7 +402,6 @@
            DISPLAY "Full Show Path: " JoebobPathRec.
            CALL "SYSTEM" USING JoebobPathRec
            END-CALL.
-
            SelectRandomMovie.
            DISPLAY "In Random"
            COMPUTE MovieRand = FUNCTION RANDOM * (MovieMod - 
@@ -412,10 +411,13 @@
                                            PrnComment                            
            MOVE FullMovie TO PrnRandMovie
            DISPLAY "path rec:" MoviePathRec
+          
            CALL "SYSTEM" USING MoviePathRec
            END-CALL
+           OPEN OUTPUT WriteFile
            WRITE OutString FROM PrintRandom
-           WRITE OutString FROM PrintComment.
+           WRITE OutString FROM PrintComment
+           CLOSE WriteFile.
 
            WriteRequest.
            OPEN EXTEND RequestFile
@@ -430,6 +432,7 @@
            ADD 1 TO Seed
            CALL "SuggestMovie" USING MovieRand, SuggestionTable
            END-CALL
+           OPEN OUTPUT WriteFile
            PERFORM VARYING IDX FROM 1 BY 1 UNTIL Idx > 5
            DISPLAY SuggestionValues(Idx)
            MOVE SMovieName(idx) TO PrnSName
@@ -437,7 +440,19 @@
       *    WRITE OutString FROM PrintRandom
       *    WRITE OutString FROM PrintComment
            WRITE OutString FROM PrnSuggestion
-           END-PERFORM.
+           END-PERFORM
+           CLOSE WriteFile.
 
            WhatCommand.
-           DISPLAY "Received What Command".
+           OPEN INPUT WriteFile
+           READ WriteFile
+           MOVE Outstring TO HoldOut
+           DISPLAY "HOldout:  " Holdout
+           MOVE  HoldOut(14 : ) TO Playing
+           DISPLAY "What Check: " Whatcheck
+           CLOSE WriteFile
+           OPEN OUTPUT WriteFile
+           WRITE OutSTring FROM WhatCheck
+           CLOSE WriteFile.
+
+           
