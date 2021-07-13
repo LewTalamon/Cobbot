@@ -165,8 +165,8 @@
            01 Triggers                 PIC X(3).
            01 PrintRandom.
                02 PrnRand                   PIC X(13) VALUE 
-               "Now Playing: ".
-               02 FILLER                    PIC XX VALUE '`'.
+               "Now Movie: ".
+               02 FILLER                    PIC XX VALUE '`"'.
                02 PrnRandMovie              PIC X(45).
                02 FILLER                    PIC X VALUE "`".
            01 PrintComment.
@@ -178,7 +178,7 @@
                02 Filler               PIC X(13) VALUE "Now Playing: ".
                02 FILLER               PIC X VALUE '`'.
                02 PrnTitle               PIC X(50).
-               02 FILLER               PIC X VALUE '`'.
+               02 FILLER               PIC X VALUE '`'.    
            01 Counters.
                02 Idx                      PIC 999.
                02 Tidx                     PIC 999.
@@ -202,6 +202,15 @@
                02 FullShow             PIC X(150).
                02 FILLER               PIC X Value SPACE.
                02 FILLER               PIC X VALUE "&".
+           01 JoeBobPathRec.
+               02 FILLER               PIC X(13) VALUE "./mpc-be.exe ".
+               02 FILLER               PIC X(4) VALUE '"E:\'.
+               02 FILLER               PIC X(11) VALUE "Television\".
+               02 JbobName             PIC X(37) VALUE 
+           "The Last Drive-In With Joe Bob Briggs".
+               02 JoebobT               PIC X(150).
+               02 FILLER               PIC X Value SPACE.
+               02 FILLER               PIC X VALUE "&".    
            01 ShowUnStr.
                02 Command             PIC X(4).
                02 ShowSeason           PIC X(3).
@@ -219,9 +228,6 @@
                02 MinNum                   PIC 9 VALUE 1.
                02 MovieMod                 PIC 9(3) VALUE 322.
                02 MovieRand                PIC 9(3).
-               02 MovieType                PIC 9.
-                   88 IsMovie          VALUE "1" "2" "3" "4" "5".
-                   88 IsJoebob         VALUE "6" "7" "8" '9' '0'.
            01 RNumber                      PIC 99.
            01 StringStuff.    
                02 CharCount                    PIC 99.
@@ -243,16 +249,18 @@
                02 PrnJName                 PIC X(43).
                02 HoldJname                PIC X(30).
                02 HoldOut                  PIC X(150).
-           01 TallyMovie                   PIC X(80).
            01 Whatcheck.
                02 FILLER               PIC X(13) VALUE "Now Playing: ".
-               02 Playing              PIC X(52).
+               02 Playing              PIC X(52).    
+           01 TallyMovie                   PIC X(80).  
            PROCEDURE DIVISION.
            OPEN INPUT ReadFile
+           OPEN OUTPUT WriteFile
            MOVE FUNCTION CURRENT-DATE TO CurrentDate
            COMPUTE DiceR = FUNCTION RANDOM(Seed)
            DISPLAY "Main Seed: " Seed
            READ ReadFile
+           DISPLAY readrec(1 : 4)
            EVALUATE FUNCTION UPPER-CASE(ReadRec(1 : 4))
            WHEN "RAND"
                    PERFORM SelectRandomMovie
@@ -267,16 +275,16 @@
            WHEN "WANT"
                PERFORM WriteRequest
            WHEN "JBOB"
-               PERFORM GetJoeBob        
+               PERFORM GetJoeBob                              
            WHEN "WHAT"
-               PERFORM WhatCommand                          
+               PERFORM WhatCommand
            END-EVALUATE
-           MOVE FullMovie TO TallyMovie
-           DISPLAY "TallyMovie: " Tallymovie
-           DISPLAY "Strg Size:" StrgSize
+      *    MOVE FullMovie TO TallyMovie
+      *    DISPLAY "TallyMovie: " Tallymovie
+      *    DISPLAY "Strg Size:" StrgSize
       *    CALL 'MovieTally' USING TallyMovie
       *    END-CALL
-           CLOSE ReadFile
+           CLOSE ReadFile,WriteFile
            STOP RUN.
 
 
@@ -295,9 +303,7 @@
            Add DiceR TO TotalRoll
                END-PERFORM
            MOVE TotalRoll TO PrnRoll
-           OPEN OUTPUT WriteFile
-           WRITE OutString FROM PrnRoll
-           CLOSE WriteFile.
+           WRITE OutString FROM PrnRoll.
            
            SelectMovie.
            PERFORM GetMovieName
@@ -305,10 +311,7 @@
            END-Call
            DISPLAY FullMovie
            MOVE FullMovie TO PrnTitle
-           DISPLAY "prn move name" PrnMovieName
-           OPEN OUTPUT WriteFile
-           WRITE Outstring FROM PrnMovieName
-           CLOSE WriteFile.
+           WRITE Outstring FROM PrnMovieName.
 
            GetMovieName.
            DISPLAY "Instring: " Instring
@@ -335,7 +338,7 @@
                                FOR LEADING SPACES                 
            COMPUTE StrgSize = (70 - CharCount)
            DISPLAY "ShowName: " InString (1 :Strgsize - 7) '!'
-               MOVE InString (1 :Strgsize - 7) TO HoldShowTitle
+               MOVE InString (1 : Strgsize - 7) TO HoldShowTitle.
            MOVE Instring(Strgsize - 5: 6) TO SeEp 
                DISPLAY "Seep: " SeEp         
            UNSTRING SeEp DELIMITED BY 'e'
@@ -358,10 +361,7 @@
                INTO FULLSHOW
            DISPLAY "Full Show Path: " ShowPathRec
            CALL "SYSTEM" USING ShowPathRec
-           END-CALL
-           OPEN OUTPUT WriteFile
-           MOVE FullShow TO PrnTitle
-           CLOSE WriteFile.
+           END-CALL.
            
            GetJoeBob.
                DISPLAY "Instring: " Instring
@@ -369,18 +369,16 @@
            INSPECT FUNCTION REVERSE(InString) TALLYING CharCount
                                FOR LEADING SPACES                 
            COMPUTE StrgSize = (70 - CharCount)
-           DISPLAY "ShowName: " InString (1:Strgsize - 7) '!'
-               MOVE InString (1:Strgsize - 6) TO HoldShowTitle
-               DISPLAY 'HOld Show T itle: ' HoldShowTitle
-           MOVE Instring(Strgsize - 5: 6) TO SeEp 
-               DISPLAY "Seep: " SeEp         
+           DISPLAY "ShowName: " InString (1:Strgsize) '!'
+               MOVE InString (1:Strgsize) TO SeEp
+           DISPLAY "Seep " Seep 
            UNSTRING SeEp DELIMITED BY 'e'
-               Into ShowSeason
+               INTO ShowSeason
            MOVE ShowSeason(2 : ) TO SeasonNum
            DISPLAY "Season Num: " SeasonNum
            SET Sidx TO 1
            SEARCH Season
-                   WHEN Sidx = Seasonnum
+                   WHEN Sidx = SeasonNum
                        Move Season(Sidx) TO FullSeason
            END-SEARCH
            DISPLAY Seep, JSeep(1)
@@ -395,19 +393,18 @@
            COMPUTE JStrgSize = (30 - CharCount)
 
            MOVE 0 TO CharCount  
-           INSPECT FUNCTION REVERSE(HoldShowTitle) TALLYING CharCount
-                                           FOR LEADING SPACES                              
+                           
            COMPUTE StrgSize = (50 - CharCount)                                             
-           STRING HoldShowTitle(1 :StrgSize), "\", FullSeason, "\",
-                                   HoldShowTitle(1 : StrgSize), " - "
+           STRING "\", FullSeason, "\", JbobName, " - "
                            , SeEp, " - ", HoldJname(1 : JstrgSize), 
                            '.mkv"'
-               INTO FULLSHOW
-           DISPLAY "Full Show Path: " ShowPathRec.
-           CALL "SYSTEM" USING ShowPathRec
+               INTO JoebobT
+           DISPLAY "Full Show Path: " JoebobPathRec.
+           CALL "SYSTEM" USING JoebobPathRec
            END-CALL.
 
            SelectRandomMovie.
+           DISPLAY "In Random"
            COMPUTE MovieRand = FUNCTION RANDOM * (MovieMod - 
                                MinNum + 1) + MinNum
            ADD 1 TO Seed
@@ -415,13 +412,10 @@
                                            PrnComment                            
            MOVE FullMovie TO PrnRandMovie
            DISPLAY "path rec:" MoviePathRec
-          
            CALL "SYSTEM" USING MoviePathRec
            END-CALL
-           OPEN OUTPUT WriteFile
            WRITE OutString FROM PrintRandom
-           WRITE OutString FROM PrintComment
-           CLOSE WriteFile.
+           WRITE OutString FROM PrintComment.
 
            WriteRequest.
            OPEN EXTEND RequestFile
@@ -436,25 +430,14 @@
            ADD 1 TO Seed
            CALL "SuggestMovie" USING MovieRand, SuggestionTable
            END-CALL
-           OPEN OUTPUT WriteFile
            PERFORM VARYING IDX FROM 1 BY 1 UNTIL Idx > 5
+           DISPLAY SuggestionValues(Idx)
            MOVE SMovieName(idx) TO PrnSName
            MOVE SComment(idx) TO PrnScomment
-           DISPLAY "prn s name: " PrintRandom
       *    WRITE OutString FROM PrintRandom
       *    WRITE OutString FROM PrintComment
            WRITE OutString FROM PrnSuggestion
-           END-PERFORM
-           CLOSE WriteFile.
+           END-PERFORM.
 
            WhatCommand.
-           OPEN INPUT WriteFile
-           READ WriteFile
-           MOVE Outstring TO HoldOut
-           DISPLAY "HOldout:  " Holdout
-           MOVE  HoldOut(14 : ) TO Playing
-           DISPLAY "What Check: " Whatcheck
-           CLOSE WriteFile
-           OPEN OUTPUT WriteFile
-           WRITE OutSTring FROM WhatCheck
-           CLOSE WriteFile.
+           DISPLAY "Received What Command".
